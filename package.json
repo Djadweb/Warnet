@@ -1,0 +1,22 @@
+{
+  "name": "Warnet",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "start:server": "node server/proxy.js",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "cesium": "^1.138.0",
+    "node-fetch": "^3.3.2",
+    "ws": "^8.13.0"
+  },
+  "devDependencies": {
+    "vite": "^7.3.1",
+    "vite-plugin-cesium": "^1.2.23"
+  }
+}

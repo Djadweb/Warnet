@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WARNET // GLOBAL DOMINATION</title>
+
+<!-- ═══ CesiumJS via npm (Vite) ═══ -->
+
+<!-- ═══ Fonts ═══ -->
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+#breaking-alert { position:fixed; top:8px; left:50%; transform:translateX(-50%); z-index:10000; background:rgba(255,26,60,0.95); color:#fff; padding:8px 16px; font-weight:700; border:1px solid rgba(255,0,40,0.9); display:none; border-radius:4px; box-shadow:0 6px 24px rgba(255,26,60,.12); }
+#breaking-alert a { color:rgba(255,255,255,.95); text-decoration:underline; margin-left:8px; font-weight:600 }
+  --bg:     #020b14;
+  --bg2:    #040f1c;
+  --bg3:    #061422;
+  --border: #0c1e30;
+  --border2:#0f2640;
+  --accent: #00d4ff;
+  --red:    #ff1a3c;
+  --orange: #ff7800;
+  --green:  #00ff88;
+  --yellow: #ffd700;
+  --text:   #6ab0d0;
+  --text2:  #2d5a78;
+  --text3:  #10304a;
+  --glow:   0 0 14px rgba(0,212,255,.45);
+  --rglow:  0 0 14px rgba(255,26,60,.55);
+  --gglow:  0 0 12px rgba(0,255,136,.4);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'Share Tech Mono',monospace; }
+
+/* scanlines */
+body::after { content:''; position:fixed; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.04) 3px,rgba(0,0,0,.04) 4px); pointer-events:none; z-index:9990; }
+
+/* ══ COUNTRY SELECT ══ */
+#csel {
+  position:fixed; inset:0; z-index:8000;
+  background:radial-gradient(ellipse at 50% 35%, #030f1e 0%, #010508 100%);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:28px;
+}
+.cs-logo { font-family:'Orbitron',monospace; font-size:54px; font-weight:900; color:var(--accent); letter-spacing:12px; text-shadow:0 0 40px rgba(0,212,255,.8), 0 0 120px rgba(0,212,255,.2); animation:logoPulse 3s ease-in-out infinite; }
+.cs-logo em { color:var(--red); font-style:normal; }
+@keyframes logoPulse { 0%,100%{opacity:1} 50%{opacity:.75} }
+.cs-sub { font-size:11px; letter-spacing:6px; color:var(--text2); margin-top:-20px; }
+.cs-notice { font-size:10px; color:var(--text3); letter-spacing:2px; text-align:center; max-width:700px; line-height:1.8; }
+.cs-notice a { color:var(--accent); text-decoration:none; }
+.cs-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; max-width:980px; width:100%; padding:0 20px; }
+.cc { background:var(--bg2); border:1px solid var(--border2); padding:18px 12px 14px; cursor:pointer; transition:all .2s; text-align:center; position:relative; overflow:hidden; }
+.cc:hover { border-color:var(--accent); box-shadow:0 0 24px rgba(0,212,255,.2), inset 0 0 20px rgba(0,212,255,.03); transform:translateY(-3px); }
+.cc-flag { font-size:32px; margin-bottom:8px; line-height:1; }
+.cc-name { font-family:'Orbitron',monospace; font-size:9px; font-weight:700; letter-spacing:2px; color:var(--text); }
+.cc-pw { display:flex; align-items:center; justify-content:center; gap:5px; font-size:8px; color:var(--text2); margin-top:6px; }
+.pw-bar { width:50px; height:2px; background:var(--bg3); border-radius:2px; overflow:hidden; }
+.pw-fill { height:100%; border-radius:2px; }
+.cc-stat { font-size:7px; color:var(--text3); margin-top:4px; letter-spacing:1px; }
+
+/* ══ TOKEN SETUP SCREEN ══ */
+#token-screen {
+  position:fixed; inset:0; z-index:7000;
+  background:radial-gradient(ellipse at 50% 35%, #030f1e 0%, #010508 100%);
+  display:none; flex-direction:column; align-items:center; justify-content:center; gap:20px;
+}
+#token-screen.show { display:flex; }
+.ts-title { font-family:'Orbitron',monospace; font-size:22px; font-weight:900; color:var(--accent); letter-spacing:4px; text-shadow:var(--glow); }
+.ts-sub { font-size:11px; color:var(--text2); letter-spacing:2px; text-align:center; max-width:560px; line-height:2; }
+.ts-sub a { color:var(--accent); }
+.ts-input-wrap { display:flex; gap:10px; align-items:center; }
+#token-input { width:420px; background:var(--bg2); border:1px solid var(--border2); color:var(--green); font-family:'Share Tech Mono',monospace; font-size:12px; padding:10px 14px; outline:none; }
+#token-input:focus { border-color:var(--accent); box-shadow:var(--glow); }
+.ts-btn { font-family:'Orbitron',monospace; font-size:10px; font-weight:700; letter-spacing:2px; padding:10px 22px; cursor:pointer; border:1.5px solid var(--accent); background:rgba(0,212,255,.1); color:var(--accent); transition:all .15s; }
+.ts-btn:hover { background:rgba(0,212,255,.25); box-shadow:var(--glow); }
+.ts-skip { font-size:9px; color:var(--text2); cursor:pointer; text-decoration:underline; letter-spacing:1px; }
+.ts-skip:hover { color:var(--text); }
+
+/* ══ MAIN APP ══ */
+#app { display:none; width:100vw; height:100vh; flex-direction:column; }
+#app.show { display:flex; }
+
+/* Header */
+#hdr { height:40px; flex-shrink:0; background:var(--bg2); border-bottom:1px solid var(--border2); display:flex; align-items:center; z-index:100; }
+.hlogo { font-family:'Orbitron',monospace; font-size:15px; font-weight:900; color:var(--accent); letter-spacing:5px; text-shadow:var(--glow); padding:0 16px; border-right:1px solid var(--border2); white-space:nowrap; flex-shrink:0; }
+.hlogo em { color:var(--red); font-style:normal; }
+.hseg { display:flex; align-items:center; gap:6px; padding:0 12px; border-right:1px solid var(--border2); height:100%; font-size:9px; flex-shrink:0; }
+.hlbl { color:var(--text2); letter-spacing:2px; }
+.hval { color:var(--accent); font-family:'Orbitron',monospace; font-size:11px; font-weight:700; }
+.live-dot { width:6px; height:6px; border-radius:50%; background:var(--red); animation:blink 1s infinite; flex-shrink:0; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+#dpill { padding:2px 8px; border:1px solid; letter-spacing:2px; font-family:'Orbitron',monospace; font-size:9px; font-weight:700; animation:dpulse 2s infinite; }
+@keyframes dpulse { 0%,100%{opacity:1} 50%{opacity:.45} }
+.hplayer { margin-left:auto; display:flex; align-items:center; gap:10px; padding:0 14px; border-left:1px solid var(--border2); flex-shrink:0; }
+.pflag { font-size:20px; }
+.pname { font-family:'Orbitron',monospace; font-size:11px; font-weight:700; color:var(--accent); }
+.hp-row { display:flex; align-items:center; gap:5px; font-size:8px; color:var(--text2); }
+.hp-bar { width:90px; height:4px; background:var(--bg3); border-radius:3px; overflow:hidden; }
+.hp-fill { height:100%; background:var(--green); border-radius:3px; transition:width .5s, background .5s; }
+
+/* ══ BODY ══ */
+#body { flex:1; display:grid; grid-template-columns:230px 1fr 260px; overflow:hidden; }
+
+/* ── Panels ── */
+.pnl { background:var(--bg2); border:1px solid var(--border); display:flex; flex-direction:column; overflow:hidden; }
+.pttl { font-family:'Orbitron',monospace; font-size:8px; font-weight:700; letter-spacing:3px; color:var(--text2); padding:7px 10px; border-bottom:1px solid var(--border); background:var(--bg3); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.badge { font-size:7px; padding:2px 6px; letter-spacing:1px; border:1px solid; }
+.badge.b { background:rgba(0,212,255,.07); color:var(--accent); border-color:rgba(0,212,255,.25); }
+.badge.r { background:rgba(255,26,60,.1); color:var(--red); border-color:rgba(255,26,60,.3); }
+.badge.g { background:rgba(0,255,136,.07); color:var(--green); border-color:rgba(0,255,136,.25); }
+.badge.y { background:rgba(255,215,0,.07); color:var(--yellow); border-color:rgba(255,215,0,.25); }
+
+/* ── Left Panel ── */
+#left { grid-column:1; overflow-y:auto; scrollbar-width:thin; scrollbar-color:var(--border2) transparent; }
+.stat-row { display:flex; border-bottom:1px solid var(--border); }
+.sbox { flex:1; padding:8px 6px; text-align:center; border-right:1px solid var(--border); }
+.sbox:last-child { border-right:none; }
+.slbl { font-size:7px; letter-spacing:2px; color:var(--text2); text-transform:uppercase; }
+.sval { font-family:'Orbitron',monospace; font-size:13px; font-weight:700; color:var(--accent); margin-top:3px; }
+.usect { border-bottom:1px solid var(--border); }
+.usect-t { font-size:7px; letter-spacing:3px; color:var(--text2); padding:7px 10px 4px; text-transform:uppercase; }
+.urow { display:flex; align-items:center; gap:7px; padding:5px 9px; cursor:pointer; transition:all .12s; border-left:2px solid transparent; margin:1px 5px; border-radius:1px; }
+.urow:hover, .urow.sel { background:rgba(0,212,255,.05); border-left-color:var(--accent); }
+.urow.sel .uname { color:var(--accent); }
+.uico { font-size:16px; width:20px; text-align:center; flex-shrink:0; }
+.uin { flex:1; min-width:0; }
+.uname { font-size:10px; font-weight:700; font-family:'Rajdhani',sans-serif; letter-spacing:1px; color:var(--text); transition:color .12s; }
+.usub { font-size:7px; color:var(--text2); margin-top:1px; }
+.ucnt { font-family:'Orbitron',monospace; font-size:13px; font-weight:700; min-width:30px; text-align:right; }
+.ucnt.hi { color:var(--accent); } .ucnt.md { color:var(--orange); } .ucnt.lo { color:var(--red); }
+.act-sec { padding:9px; display:flex; flex-direction:column; gap:6px; border-top:1px solid var(--border); flex-shrink:0; }
+.btn { font-family:'Orbitron',monospace; font-size:9px; font-weight:700; letter-spacing:2px; padding:10px; border:1.5px solid; background:transparent; cursor:pointer; width:100%; transition:all .15s; }
+  .btn.strike { color:var(--red); border-color:var(--red); }
+.btn.strike:hover { background:rgba(255,26,60,.18); box-shadow:var(--rglow); }
+.btn.defend { color:var(--green); border-color:var(--green); }
+.btn.defend:hover { background:rgba(0,255,136,.14); box-shadow:var(--gglow); }
+.btn.reload { color:var(--yellow); border-color:var(--yellow); }
+.btn.reload:hover { background:rgba(255,215,0,.1); }
+.btn.nukeall { color:var(--orange); border-color:var(--orange); }
+.btn.nukeall:hover { background:rgba(255,120,0,.12); }
+  /* Deploy ship button (distinct purple accent) */
+  .btn.deploy { color: #bf5fff; border-color: #bf5fff; }
+  .btn.deploy:hover { background: rgba(191,95,255,0.12); box-shadow: 0 0 12px rgba(191,95,255,0.18); }
+
+/* ── Map ── */
+#cesium-container { grid-column:2; position:relative; overflow:hidden; }
+#cesiumContainer { width:100%; height:100%; }
+
+/* Cesium toolbar override */
+.cesium-viewer-toolbar, .cesium-viewer-animationContainer,
+.cesium-viewer-timelineContainer, .cesium-viewer-fullscreenContainer,
+.cesium-viewer-vrContainer, .cesium-viewer-geocoderContainer,
+.cesium-viewer-homeButtonContainer, .cesium-viewer-navigationHelpButtonContainer,
+.cesium-viewer-sceneModePicker { display:none !important; }
+.cesium-widget-credits { display:none !important; }
+.cesium-infoBox { display:none !important; }
+.cesium-selection-wrapper { display:none !important; }
+
+/* Mode Banner */
+#mode-banner { position:absolute; top:12px; left:50%; transform:translateX(-50%); z-index:500; font-family:'Orbitron',monospace; font-size:11px; font-weight:700; letter-spacing:3px; padding:7px 22px; pointer-events:none; display:none; animation:dpulse 1s infinite; white-space:nowrap; }
+#mode-banner.s { background:rgba(255,26,60,.18); border:1px solid var(--red); color:var(--red); box-shadow:var(--rglow); }
+#mode-banner.d { background:rgba(0,255,136,.12); border:1px solid var(--green); color:var(--green); box-shadow:var(--gglow); }
+
+/* Coords HUD */
+#coords-hud { position:absolute; top:12px; left:12px; z-index:400; font-size:9px; color:var(--accent); opacity:.7; pointer-events:none; letter-spacing:1px; text-shadow:var(--glow); }
+#target-hud { position:absolute; bottom:30px; left:12px; z-index:400; font-size:9px; color:var(--red); pointer-events:none; letter-spacing:1px; display:none; }
+
+/* Map Legend */
+.map-legend { position:absolute; bottom:30px; right:12px; z-index:400; pointer-events:none; display:flex; flex-direction:column; gap:4px; }
+.leg { display:flex; align-items:center; gap:5px; font-size:8px; letter-spacing:1px; color:var(--text2); }
+.leg-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+/* Ticker */
+#ticker { position:absolute; bottom:0; left:0; right:0; height:22px; z-index:400; background:rgba(255,26,60,.1); border-top:1px solid rgba(255,26,60,.3); overflow:hidden; display:flex; align-items:center; pointer-events:none; }
+#tick-txt { white-space:nowrap; font-size:9px; color:var(--red); letter-spacing:1px; padding-left:100%; animation:tickA 90s linear infinite; }
+@keyframes tickA { from{transform:translateX(0)} to{transform:translateX(-100%)} }
+
+/* ── Right Panel ── */
+#right { grid-column:3; display:flex; flex-direction:column; overflow:hidden; }
+.cfl-list { overflow-y:auto; scrollbar-width:thin; scrollbar-color:var(--border2) transparent; }
+.cfl { padding:7px 10px; border-bottom:1px solid var(--border); border-left:3px solid transparent; cursor:pointer; transition:background .15s; }
+.cfl:hover { background:rgba(255,26,60,.04); }
+.cfl.hot { border-left-color:var(--red); }
+.cfl.warm { border-left-color:var(--orange); }
+.cfl.cool { border-left-color:var(--yellow); }
+.cfl-hdr { display:flex; align-items:center; justify-content:space-between; margin-bottom:2px; }
+.cfl-name { font-family:'Rajdhani',sans-serif; font-size:12px; font-weight:700; color:var(--text); }
+.cfl-bdg { font-size:7px; padding:2px 4px; border:1px solid; letter-spacing:1px; }
+.cfl-bdg.active { color:var(--red); border-color:var(--red); background:rgba(255,26,60,.1); animation:blink 1.5s infinite; }
+.cfl-bdg.tensions { color:var(--yellow); border-color:var(--yellow); background:rgba(255,215,0,.07); }
+.cfl-bdg.ongoing { color:var(--orange); border-color:var(--orange); background:rgba(255,120,0,.07); }
+.cfl-pt { font-size:8px; color:var(--text2); }
+.cfl-cas { font-size:7px; color:var(--text2); margin-top:1px; }
+
+#intel { flex:1; overflow-y:auto; padding:4px; scrollbar-width:thin; scrollbar-color:var(--border2) transparent; }
+.imsg { padding:5px 8px; margin-bottom:3px; border-left:2px solid var(--border2); font-size:9px; line-height:1.5; animation:fadeSlide .25s ease; }
+@keyframes fadeSlide { from{transform:translateX(6px);opacity:0} to{transform:none;opacity:1} }
+.imsg.n { border-left-color:var(--accent); color:var(--text); }
+.imsg.w { border-left-color:var(--red); color:rgba(255,26,60,.9); }
+.imsg.ok { border-left-color:var(--green); color:var(--green); }
+.imsg.y { border-left-color:var(--yellow); color:rgba(255,215,0,.85); }
+.its { font-size:7px; opacity:.45; margin-right:5px; }
+
+/* ── Console ── */
+#con { height:130px; flex-shrink:0; background:var(--bg); border-top:1px solid var(--border2); display:flex; flex-direction:column; }
+#con-out { flex:1; overflow-y:auto; padding:3px 10px; font-size:9px; line-height:1.9; scrollbar-width:thin; scrollbar-color:var(--border2) transparent; }
+.cl { display:flex; gap:8px; }
+.cts { color:var(--text3); flex-shrink:0; }
+.ctx.c { color:var(--accent); } .ctx.r { color:var(--red); } .ctx.g { color:var(--green); } .ctx.y { color:var(--yellow); }
+#con-in { display:flex; align-items:center; gap:8px; padding:5px 10px; border-top:1px solid var(--border); background:var(--bg2); flex-shrink:0; }
+#cin-pr { color:var(--accent); font-size:10px; white-space:nowrap; }
+#cmd { flex:1; background:none; border:none; outline:none; color:var(--green); font-family:'Share Tech Mono',monospace; font-size:10px; caret-color:var(--green); }
+
+/* ── Modal ── */
+#modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.88); z-index:3000; align-items:center; justify-content:center; }
+#modal.show { display:flex; }
+.mbox { background:var(--bg2); border:1px solid var(--red); box-shadow:0 0 60px rgba(255,26,60,.25); padding:28px 36px; min-width:420px; text-align:center; animation:mIn .15s ease; }
+@keyframes mIn { from{transform:scale(.92);opacity:0} to{transform:scale(1);opacity:1} }
+.mico { font-size:36px; margin-bottom:10px; }
+.mttl { font-family:'Orbitron',monospace; font-size:16px; font-weight:900; letter-spacing:4px; color:var(--red); text-shadow:var(--rglow); margin-bottom:14px; }
+.mbod { font-size:11px; line-height:2.1; color:var(--text); margin-bottom:16px; }
+.mbod span { color:var(--accent); }
+.mwrn { font-size:8px; letter-spacing:1px; color:rgba(255,26,60,.7); margin-bottom:18px; }
+.mbtns { display:flex; gap:10px; justify-content:center; }
+.mbtn { font-family:'Orbitron',monospace; font-size:9px; font-weight:700; letter-spacing:2px; padding:10px 24px; cursor:pointer; border:1.5px solid; background:transparent; transition:all .15s; }
+.mbtn.cf { color:var(--red); border-color:var(--red); }
+.mbtn.cf:hover { background:rgba(255,26,60,.2); box-shadow:var(--rglow); }
+.mbtn.ca { color:var(--text2); border-color:var(--border2); }
+.mbtn.ca:hover { border-color:var(--text); color:var(--text); }
+
+/* ── Game Over ── */
+#go { display:none; position:fixed; inset:0; background:rgba(0,0,0,.97); z-index:9000; flex-direction:column; align-items:center; justify-content:center; gap:12px; }
+#go.show { display:flex; }
+.got { font-family:'Orbitron',monospace; font-size:56px; font-weight:900; letter-spacing:8px; animation:goFlash .6s infinite; }
+@keyframes goFlash { 0%,100%{opacity:1} 50%{opacity:.1} }
+.gos { font-size:12px; letter-spacing:5px; color:var(--text2); }
+.go-stats { font-size:12px; color:var(--text); line-height:2.3; text-align:center; margin-top:10px; }
+.btn-restart { margin-top:20px; font-family:'Orbitron',monospace; font-size:11px; font-weight:700; letter-spacing:4px; padding:14px 48px; cursor:pointer; border:2px solid var(--accent); background:rgba(0,212,255,.1); color:var(--accent); transition:all .15s; }
+.btn-restart:hover { background:rgba(0,212,255,.25); box-shadow:var(--glow); }
+
+/* ── Explosion overlay ── */
+.expl-flash { position:fixed; inset:0; z-index:2000; pointer-events:none; background:radial-gradient(circle at var(--ex) var(--ey), rgba(255,200,0,.35) 0%, rgba(255,50,0,.15) 40%, transparent 70%); animation:flashOut .8s ease-out forwards; }
+@keyframes flashOut { 0%{opacity:1} 100%{opacity:0} }
+</style>
+</head>
+<body>
+  <div id="breaking-alert"></div>
+
+<!-- ══ TOKEN SETUP ══ -->
+<div id="token-screen">
+  <div class="ts-title">🛰 CESIUM ION ACCESS TOKEN</div>
+  <div class="ts-sub">
+    CesiumJS requires a free Ion access token for satellite imagery & terrain.<br>
+    Get yours in 30 seconds at <a href="https://ion.cesium.com" target="_blank">ion.cesium.com</a> → Sign Up → Access Tokens → Default Token<br>
+    Or skip to use basic OSM tiles (no terrain/satellite).
+  </div>
+  <div class="ts-input-wrap">
+    <input id="token-input" type="text" placeholder="Paste your Cesium Ion access token here…" autocomplete="off">
+    <button class="ts-btn" onclick="applyToken()">CONNECT</button>
+  </div>
+  <div class="ts-skip" onclick="skipToken()">▶ Skip — use basic map tiles</div>
+</div>
+
+<!-- ══ COUNTRY SELECT ══ -->
+<div id="csel">
+  <div class="cs-logo">WAR<em>NET</em></div>
+  <div class="cs-sub">// SELECT YOUR NATION — REAL CONFLICTS — GLOBAL DOMINATION</div>
+  <div class="cs-grid" id="cgrid"></div>
+  <div class="cs-notice">
+    Powered by Real 3D Earth · Satellite Imagery · Real Terrain<br>
+    Based on real 2025–2026 global conflict data
+  </div>
+</div>
+
+<!-- ══ MAIN APP ══ -->
+<div id="app">
+  <div id="hdr">
+    <div class="hlogo">WAR<em>NET</em></div>
+    <div class="hseg"><div class="live-dot"></div><span class="hlbl">UTC</span><span class="hval" id="hclock">00:00:00</span></div>
+    <div class="hseg"><span class="hlbl">DEFCON</span><div id="dpill" class="hval">5</div></div>
+    <div class="hseg"><span class="hlbl">STRIKES</span><span class="hval" id="hstr">0</span></div>
+    <div class="hseg"><span class="hlbl">SCORE</span><span class="hval" id="hsc">0</span></div>
+    <div class="hseg"><span class="hlbl">CREDITS</span><span class="hval" id="hcr">10,000</span></div>
+    <div class="hseg"><span class="hlbl">ACTIVE WARS</span><span class="hval" style="color:var(--red)" id="hcfl">15</span></div>
+    <div class="hplayer">
+      <div class="pflag" id="pflag">🏳</div>
+      <div>
+        <div class="pname" id="pname">—</div>
+        <div class="hp-row">HP:<span id="hpn">100</span>%<div class="hp-bar"><div class="hp-fill" id="hpf"></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="body">
+
+    <!-- LEFT: ARSENAL -->
+    <div class="pnl" id="left">
+      <div class="pttl">MILITARY COMMAND <div class="badge b" id="selp">NO UNIT</div></div>
+      <div class="stat-row">
+        <div class="sbox"><div class="slbl">Power</div><div class="sval" id="spow">—</div></div>
+        <div class="sbox"><div class="slbl">Budget</div><div class="sval" id="sbud">—</div></div>
+        <div class="sbox"><div class="slbl">Nukes</div><div class="sval" id="snuk">—</div></div>
+      </div>
+      <div id="ulist"></div>
+      <div class="act-sec">
+        <button class="btn strike" onclick="enterStrike()">⚡ LAUNCH STRIKE</button>
+        <button class="btn defend" onclick="enterDefend()">🛡 DEPLOY DEFENSE</button>
+        <button class="btn deploy" onclick="enterDeployShip()">⛴ DEPLOY SHIP</button>
+        <button class="btn nukeall" onclick="launchSalvo()">💥 SALVO STRIKE (−3000cr)</button>
+        <button class="btn reload" onclick="reloadArsenal()">↺ RELOAD ARSENAL (−2000cr)</button>
+      </div>
+    </div>
+
+    <!-- CESIUM MAP -->
+    <div id="cesium-container">
+      <div id="cesiumContainer"></div>
+      <div id="mode-banner"></div>
+      <div id="coords-hud">LAT — / LON —</div>
+      <div id="target-hud">🎯 TARGET ACQUIRED</div>
+      <div class="map-legend">
+        <div class="leg"><div class="leg-dot" style="background:var(--red)"></div>ACTIVE WAR</div>
+        <div class="leg"><div class="leg-dot" style="background:var(--orange)"></div>CONFLICT</div>
+        <div class="leg"><div class="leg-dot" style="background:var(--yellow)"></div>TENSIONS</div>
+        <div class="leg"><div class="leg-dot" style="background:var(--green)"></div>DEFENSE</div>
+        <div class="leg"><div class="leg-dot" style="background:var(--accent)"></div>YOUR STRIKE</div>
+      </div>
+      <div id="ticker"><div id="tick-txt">
+        ⚠ USA–IRAN: CARRIER GROUPS DEPLOYED IN PERSIAN GULF &nbsp;&nbsp;&nbsp;
+        ⚠ RUSSIA–UKRAINE: DAY 1130 — DRONE STRIKES ON KYIV &nbsp;&nbsp;&nbsp;
+        ⚠ PLA EXERCISES AROUND TAIWAN STRAIT — US 7TH FLEET RESPONDS &nbsp;&nbsp;&nbsp;
+        ⚠ ISRAEL–GAZA: CEASEFIRE COLLAPSE — AIRSTRIKES RESUME &nbsp;&nbsp;&nbsp;
+        ⚠ NORTH KOREA: HWASONG-19 ICBM — IMPACT SEA OF JAPAN &nbsp;&nbsp;&nbsp;
+        ⚠ SUDAN: RSF ADVANCE ON KHARTOUM — UN EMERGENCY &nbsp;&nbsp;&nbsp;
+        ⚠ DR CONGO: M23 REBELS SEIZE GOMA — 500K CIVILIANS DISPLACED &nbsp;&nbsp;&nbsp;
+        ⚠ SAHEL: WAGNER JUNTA OFFENSIVE — MALI BORDER TOWNS FALL &nbsp;&nbsp;&nbsp;
+      </div></div>
+    </div>
+
+    <!-- RIGHT: INTEL -->
+    <div class="pnl" id="right">
+      <div class="pttl">LIVE CONFLICTS <div class="badge r" id="cflpill">15 ACTIVE</div></div>
+      <div class="cfl-list" id="cfl-list" style="max-height:52%;overflow-y:auto;"></div>
+      <div class="pttl" style="border-top:1px solid var(--border2);">INTEL FEED <div class="badge b">LIVE</div></div>
+      <div id="intel"></div>
+    </div>
+
+  </div>
+
+  <!-- Console -->
+  <div id="con">
+    <div class="pttl">COMMAND CONSOLE &nbsp;<span style="color:var(--text3)">TYPE</span> <span style="color:var(--accent)">HELP</span></div>
+    <div id="con-out"></div>
+    <div id="con-in">
+      <div id="cin-pr">WARNET://&gt;</div>
+      <input id="cmd" type="text" placeholder="Enter command…" autocomplete="off" spellcheck="false">
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="modal">
+  <div class="mbox">
+    <div class="mico">☢</div>
+    <div class="mttl">AUTHORIZE STRIKE</div>
+    <div class="mbod" id="mbod">—</div>
+    <div class="mwrn">⚠ THIS ACTION IS IRREVERSIBLE — ENEMY RETALIATION EXPECTED</div>
+    <div class="mbtns">
+      <button class="mbtn cf" onclick="doStrike()">AUTHORIZE</button>
+      <button class="mbtn ca" onclick="closeModal()">ABORT</button>
+    </div>
+  </div>
+</div>
+
+<!-- Game Over -->
+<div id="go">
+  <div class="got" id="go-t">DEFEATED</div>
+  <div class="gos" id="go-s">—</div>
+  <div class="go-stats" id="go-stats"></div>
+  <button class="btn-restart" onclick="location.reload()">↩ NEW GAME</button>
+</div>
+
+<script type="module" src="/src/main.js"></script>
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════════════
+//  NATIONS DATA
+// ═══════════════════════════════════════════════════
+const NATIONS = [
+  { id:'usa',     name:'United States', flag:'🇺🇸', power:100, budget:'$886B', nukes:5500,  lat:38.9,  lng:-77.0,  camLat:35,   camLng:-100,  camAlt:12e6,
+    mil:{ icbm:400, tomahawk:4000, f35:450, carrier:11, destroyer:68, submarine:68, drone:10000, patriot:160, thaad:7 } },
+  { id:'russia',  name:'Russia',        flag:'🇷🇺', power:92,  budget:'$86B',  nukes:6257,  lat:55.7,  lng:37.6,   camLat:55,   camLng:80,    camAlt:12e6,
+    mil:{ icbm:1185, iskander:700, su57:76, carrier:1, destroyer:11, submarine:64, drone:3000, s400:400, kinzhal:200 } },
+  { id:'china',   name:'China',         flag:'🇨🇳', power:90,  budget:'$224B', nukes:410,   lat:39.9,  lng:116.4,  camLat:35,   camLng:110,   camAlt:10e6,
+    mil:{ icbm:350, df41:24, j20:200, carrier:3, destroyer:50, submarine:79, drone:50000, hq9:400 } },
+  { id:'uk',      name:'United Kingdom',flag:'🇬🇧', power:72,  budget:'$68B',  nukes:225,   lat:51.5,  lng:-0.1,   camLat:50,   camLng:0,     camAlt:6e6,
+    mil:{ trident:215, tomahawk:1000, typhoon:160, carrier:2, destroyer:6, submarine:11, drone:300, starstreak:400 } },
+  { id:'france',  name:'France',        flag:'🇫🇷', power:73,  budget:'$53B',  nukes:290,   lat:48.8,  lng:2.3,    camLat:48,   camLng:5,     camAlt:5e6,
+    mil:{ icbm:290, scalp:1200, rafale:254, carrier:1, destroyer:11, submarine:10, drone:800, crotale:500 } },
+  { id:'israel',  name:'Israel',        flag:'🇮🇱', power:68,  budget:'$24B',  nukes:90,    lat:31.7,  lng:35.2,   camLat:31,   camLng:35,    camAlt:3e6,
+    mil:{ jericho:50, spike:10000, f35:50, destroyer:3, submarine:5, drone:10000, ironDome:2000 } },
+  { id:'iran',    name:'Iran',          flag:'🇮🇷', power:55,  budget:'$10B',  nukes:0,     lat:35.7,  lng:51.4,   camLat:32,   camLng:55,    camAlt:5e6,
+    mil:{ shahab:300, cruise:400, f14:20, destroyer:3, submarine:33, drone:3000, bavar373:4 } },
+  { id:'nkorea',  name:'North Korea',   flag:'🇰🇵', power:45,  budget:'$4B',   nukes:50,    lat:39.0,  lng:125.7,  camLat:37,   camLng:126,   camAlt:4e6,
+    mil:{ icbm:50, hwasong:100, mig29:35, destroyer:3, submarine:70, drone:800, kn06:200 } },
+  { id:'india',   name:'India',         flag:'🇮🇳', power:76,  budget:'$72B',  nukes:164,   lat:28.6,  lng:77.2,   camLat:22,   camLng:80,    camAlt:8e6,
+    mil:{ agni5:100, brahmos:3000, rafale:36, carrier:2, destroyer:10, submarine:16, drone:6000, akash:400 } },
+  { id:'pakistan',name:'Pakistan',      flag:'🇵🇰', power:52,  budget:'$9B',   nukes:165,   lat:33.7,  lng:73.1,   camLat:30,   camLng:70,    camAlt:5e6,
+    mil:{ shaheen:200, raad:400, f16:76, destroyer:8, submarine:8, drone:1000, hq9:40 } },
+];
+
+// ═══════════════════════════════════════════════════
+//  CONFLICTS DATA (real 2025-2026)
+// ═══════════════════════════════════════════════════
+const CONFLICTS = [
+  { id:'ukraine', name:'Russia–Ukraine War',    parties:'Russia vs Ukraine',      status:'active',   label:'ACTIVE WAR',    lat:49.0,  lng:31.0,  casualties:'750,000+',          desc:'Full-scale invasion, drone warfare, Kharkiv & Zaporizhzhia fronts' },
+  { id:'gaza',    name:'Israel–Gaza War',        parties:'Israel vs Hamas/PIJ',    status:'active',   label:'ACTIVE WAR',    lat:31.5,  lng:34.4,  casualties:'47,000+ killed',     desc:'Urban warfare, IDF ground & air operations, Rafah offensive' },
+  { id:'sudan',   name:'Sudan Civil War',        parties:'SAF vs RSF',             status:'active',   label:'ACTIVE WAR',    lat:15.5,  lng:32.5,  casualties:'150,000+ killed',    desc:'RSF controls Darfur, Khartoum contested, humanitarian collapse' },
+  { id:'myanmar', name:'Myanmar Civil War',      parties:'Junta vs Resistance',    status:'active',   label:'ACTIVE WAR',    lat:19.8,  lng:96.1,  casualties:'50,000+ killed',     desc:'PDFs seize territory, junta airstrike campaign intensifies' },
+  { id:'ethiopia',name:'Ethiopia Conflicts',     parties:'Govt vs OLA/Fano',       status:'active',   label:'ACTIVE WAR',    lat:9.0,   lng:38.7,  casualties:'500,000+',           desc:'Amhara Fano insurgency, Oromo Liberation Army operations' },
+  { id:'congo',   name:'DR Congo–M23',           parties:'Congo vs M23/Rwanda',    status:'active',   label:'ACTIVE WAR',    lat:-1.7,  lng:29.2,  casualties:'Millions displaced', desc:'M23 seized Goma, Rwanda backing accused, UN evacuates' },
+  { id:'usiran',  name:'USA–Iran Tensions',      parties:'USA & Israel vs Iran',   status:'tensions', label:'HIGH TENSIONS',  lat:27.0,  lng:52.0,  casualties:'Proxy ongoing',      desc:'Strait of Hormuz blockade threat, US carrier groups deployed, nuclear talks collapsed' },
+  { id:'taiwan',  name:'China–Taiwan Strait',    parties:'PLA vs Taiwan + USA',    status:'tensions', label:'HIGH TENSIONS',  lat:24.0,  lng:121.0, casualties:'No combat yet',      desc:'PLA blockade rehearsals, ADIZ violations daily, US arms sales surge' },
+  { id:'nkorea',  name:'North Korea ICBM',       parties:'DPRK vs USA/S.Korea',    status:'tensions', label:'HIGH TENSIONS',  lat:39.0,  lng:127.5, casualties:'Tests ongoing',      desc:'Hwasong-19 ICBM test over Pacific, DMZ artillery incidents, EMP warnings' },
+  { id:'indopak', name:'India–Pakistan LoC',     parties:'India vs Pakistan',      status:'tensions', label:'TENSIONS',       lat:33.0,  lng:74.0,  casualties:'Skirmishes ongoing', desc:'Kashmir LoC violations, surgical strike threats, nuclear posturing' },
+  { id:'somalia', name:'Somalia Conflict',       parties:'Govt+AU vs Al-Shabaab',  status:'ongoing',  label:'ONGOING',        lat:5.1,   lng:46.2,  casualties:'Tens of thousands',  desc:'US drone strikes, suicide bombings in Mogadishu, Al-Shabaab expanding' },
+  { id:'sahel',   name:'Sahel Insurgency',       parties:'Wagner/Juntas vs IS',    status:'ongoing',  label:'ONGOING',        lat:14.0,  lng:-1.5,  casualties:'25,000+ since 2015', desc:'Wagner-backed juntas Mali/Niger/Burkina Faso, jihadist expansion' },
+  { id:'haiti',   name:'Haiti Gang War',         parties:'Gangs vs Government',    status:'ongoing',  label:'ONGOING',        lat:18.5,  lng:-72.3, casualties:'5,000+ in 2024',     desc:'Gang coalition controls Port-au-Prince, state collapse, Kenyan mission' },
+  { id:'westbank',name:'West Bank Violence',     parties:'IDF vs Palestinians',    status:'ongoing',  label:'ONGOING',        lat:32.0,  lng:35.2,  casualties:'800+ killed 2024',   desc:'Jenin, Tulkarm, Nablus raids, PA authority collapsing' },
+  { id:'armenia', name:'Armenia–Azerbaijan',     parties:'Armenia vs Azerbaijan',  status:'tensions', label:'TENSIONS',       lat:40.2,  lng:46.0,  casualties:'Post-Karabakh',      desc:'Border demarcation disputes, Turkish-Russian influence conflict' },
+];
+
+// ═══════════════════════════════════════════════════
+//  UNIT METADATA
+// ═══════════════════════════════════════════════════
+const UL = { icbm:'ICBM',df41:'DF-41 ICBM',hwasong:'Hwasong ICBM',shahab:'Shahab Ballistic',agni5:'Agni-5 ICBM',jericho:'Jericho III',shaheen:'Shaheen-III',trident:'Trident SLBM',tomahawk:'Tomahawk Cruise',iskander:'Iskander-M',brahmos:'BrahMos',raad:"Ra'ad Cruise",scalp:'SCALP-EG',cruise:'Cruise Missile',f35:'F-35 Strike',j20:'J-20 Stealth',su57:'Su-57 Strike',f14:'F-14 Strike',mig29:'MiG-29',rafale:'Rafale Strike',typhoon:'Eurofighter',f16:'F-16 Strike',carrier:'Carrier Strike',destroyer:'Destroyer Salvo',submarine:'Sub Launch',drone:'Drone Swarm',spike:'Spike ATGM',kinzhal:'Kinzhal Hypers.',patriot:'Patriot SAM',thaad:'THAAD System',s400:'S-400 SAM',hq9:'HQ-9 SAM',ironDome:'Iron Dome',bavar373:'Bavar-373',kn06:'KN-06 SAM',akash:'Akash SAM',crotale:'Crotale NG',starstreak:'Starstreak HVM' };
+const UC = { icbm:1200,df41:1200,hwasong:800,shahab:400,agni5:900,jericho:600,shaheen:600,trident:1000,tomahawk:300,iskander:400,brahmos:350,raad:200,scalp:300,cruise:250,f35:500,j20:600,su57:550,f14:200,mig29:150,rafale:500,typhoon:400,f16:300,carrier:800,destroyer:350,submarine:600,drone:50,spike:80,kinzhal:900,patriot:400,thaad:800,s400:600,hq9:500,ironDome:200,bavar373:300,kn06:200,akash:250,crotale:300,starstreak:100 };
+const UD = { icbm:100,df41:100,hwasong:90,shahab:40,agni5:90,jericho:70,shaheen:70,trident:95,tomahawk:45,iskander:55,brahmos:50,raad:35,scalp:40,cruise:35,f35:60,j20:65,su57:65,f14:30,mig29:25,rafale:55,typhoon:50,f16:45,carrier:85,destroyer:60,submarine:75,drone:20,spike:40,kinzhal:80 };
+const UI = { icbm:'☢',df41:'☢',hwasong:'☢',shahab:'🚀',agni5:'☢',jericho:'☢',shaheen:'☢',trident:'☢',tomahawk:'🎯',iskander:'💥',brahmos:'💥',raad:'🚀',scalp:'🚀',cruise:'🚀',f35:'✈',j20:'✈',su57:'✈',f14:'✈',mig29:'✈',rafale:'✈',typhoon:'✈',f16:'✈',carrier:'⚓',destroyer:'🛳',submarine:'🐟',drone:'🔺',spike:'⚡',kinzhal:'⚡',patriot:'🛡',thaad:'🔶',s400:'🛡',hq9:'🛡',ironDome:'🔵',bavar373:'🛡',kn06:'🔶',akash:'🛡',crotale:'🔵',starstreak:'⬆' };
+const OFF = ['icbm','df41','hwasong','shahab','agni5','jericho','shaheen','trident','tomahawk','iskander','brahmos','raad','scalp','cruise','f35','j20','su57','f14','mig29','rafale','typhoon','f16','carrier','destroyer','submarine','drone','spike','kinzhal'];
+const DEF = ['patriot','thaad','s400','hq9','ironDome','bavar373','kn06','akash','crotale','starstreak'];
+const NUKE_UNITS = ['icbm','df41','hwasong','agni5','jericho','shaheen','trident'];
+
+// ═══════════════════════════════════════════════════
+//  GAME STATE
+// ═══════════════════════════════════════════════════
+let G = {
+  player: null, hp:100, credits:10000, strikes:0, score:0, defcon:5,
+  mode: null,    // 'strike' | 'defend'
+  selUnit: null,
+  pendCoords: null,  // { lat, lng }
+  pendName: '',
+  defenses: [],
+  gameActive: true,
+  viewer: null,
+  conflictEntities: [],
+  trajectories: [],
+  cesiumReady: false,
+  useToken: false,
+};
+
+// ═══════════════════════════════════════════════════
+//  TOKEN FLOW
+// ═══════════════════════════════════════════════════
+window.onload = () => {
+  // Set a placeholder Ion token (required for Cesium to init, even with OSM tiles)
+  Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlYWE1OWUxNy1mMWZiLTQzYjYtYTQ0OS1kMWFjYmFkNjc5YzciLCJpZCI6NTc3MzMsImlhdCI6MTYyNzg0NTE4Mn0.XcKpgANiY19MC4bdFUXMVEBToBmqS8kuYpUlxJHYZxk';
+  G.useToken = false;
+  buildCSel();
+};
+
+function applyToken() {
+  const tok = document.getElementById('token-input').value.trim();
+  if (!tok) { alert('Please paste a valid Cesium Ion token.'); return; }
+  Cesium.Ion.defaultAccessToken = tok;
+  G.useToken = true;
+  document.getElementById('token-screen').classList.remove('show');
+  buildCSel();
+}
+
+function skipToken() {
+  // Use a minimal token or none — will use OSM tiles
+  Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiJlYWE1OWUxNy1mMWZiLTQzYjYtYTQ0OS1kMWFjYmFkNjc5YzciLCJpZCI6NTc3MzMsImlhdCI6MTYyNzg0NTE4Mn0.XcKpgANiY19MC4bdFUXMVEBToBmqS8kuYpUlxJHYZxk';
+  G.useToken = false;
+  document.getElementById('token-screen').classList.remove('show');
+  buildCSel();
+}
+
+// ═══════════════════════════════════════════════════
+//  COUNTRY SELECT
+// ═══════════════════════════════════════════════════
+function buildCSel() {
+  const g = document.getElementById('cgrid');
+  NATIONS.forEach(n => {
+    const d = document.createElement('div');
+    d.className = 'cc';
+    const pc = n.power > 80 ? 'var(--red)' : n.power > 60 ? 'var(--orange)' : 'var(--yellow)';
+    d.innerHTML = `<div class="cc-flag">${n.flag}</div>
+      <div class="cc-name">${n.name}</div>
+      <div class="cc-pw">PWR<div class="pw-bar"><div class="pw-fill" style="width:${n.power}%;background:${pc}"></div></div>${n.power}</div>
+      <div class="cc-stat">☢ ${n.nukes.toLocaleString()} warheads · ${n.budget}</div>`;
+    d.onclick = () => startGame(n);
+    g.appendChild(d);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  CESIUM INIT
+// ═══════════════════════════════════════════════════
+function initCesium(nation) {
+  const viewer = new Cesium.Viewer('cesiumContainer', {
+    imageryProvider: new Cesium.UrlTemplateImageryProvider({
+      url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      subdomains: ['a','b','c'],
+      maximumLevel: 19,
+      credit: '© OpenStreetMap contributors',
+    }),
+    terrainProvider: new Cesium.EllipsoidTerrainProvider(),
+    sceneMode: Cesium.SceneMode.SCENE2D,
+    animation: false,
+    baseLayerPicker: false,
+    fullscreenButton: false,
+    geocoder: false,
+    homeButton: false,
+    infoBox: false,
+    sceneModePicker: false,
+    selectionIndicator: false,
+    timeline: false,
+    navigationHelpButton: false,
+    vrButton: false,
+    creditContainer: document.createElement('div'),
+    skyAtmosphere: false,
+    contextOptions: { requestWebgl2: true },
+  });
+
+  G.viewer = viewer;
+
+  // 2D map tweaks
+  viewer.scene.globe.depthTestAgainstTerrain = false;
+  viewer.scene.backgroundColor = Cesium.Color.fromCssColorString('#020b14');
+
+  // Fly to player nation in 2D
+  viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees(nation.camLng, nation.camLat, nation.camAlt),
+    duration: 2,
+  });
+
+  // Mouse move — coords HUD
+  const handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
+
+  handler.setInputAction(movement => {
+    const cartesian = viewer.camera.pickEllipsoid(movement.endPosition, viewer.scene.globe.ellipsoid);
+    if (cartesian) {
+      const carto = Cesium.Cartographic.fromCartesian(cartesian);
+      const lat = Cesium.Math.toDegrees(carto.latitude).toFixed(2);
+      const lng = Cesium.Math.toDegrees(carto.longitude).toFixed(2);
+      document.getElementById('coords-hud').textContent =
+        `${Math.abs(lat)}°${lat >= 0 ? 'N' : 'S'} / ${Math.abs(lng)}°${lng >= 0 ? 'E' : 'W'}`;
+    }
+  }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+  // In 2D mode, use LEFT_DOWN drag to pan (default) and scroll to zoom
+  viewer.scene.screenSpaceCameraController.enableRotate = false;
+  viewer.scene.screenSpaceCameraController.enableTilt = false;
+
+  // Left click — strike / defend
+  handler.setInputAction(click => {
+    if (!G.mode) return;
+    const ray = viewer.camera.getPickRay(click.position);
+    const cartesian = viewer.scene.globe.pick(ray, viewer.scene);
+    if (!cartesian) return;
+    const carto = Cesium.Cartographic.fromCartesian(cartesian);
+    const lat = Cesium.Math.toDegrees(carto.latitude);
+    const lng = Cesium.Math.toDegrees(carto.longitude);
+    G.pendCoords = { lat, lng };
+
+    // Find nearest conflict
+    let best = null, bd = 9999;
+    CONFLICTS.forEach(c => {
+      const d = Math.hypot(c.lat - lat, c.lng - lng);
+      if (d < bd) { bd = d; best = c; }
+    });
+    G.pendName = bd < 15 ? best.name : `${Math.abs(lat).toFixed(1)}°${lat >= 0 ? 'N' : 'S'} / ${Math.abs(lng).toFixed(1)}°${lng >= 0 ? 'E' : 'W'}`;
+
+    if (G.mode === 'strike') showModal();
+    else deployDefenseAt(lat, lng);
+  }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+  // Plot conflict markers
+  plotConflicts();
+  plotPlayerBase(nation);
+
+  G.cesiumReady = true;
+}
+
+// ═══════════════════════════════════════════════════
+//  PLOT CONFLICT MARKERS
+// ═══════════════════════════════════════════════════
+function plotConflicts() {
+  const v = G.viewer;
+  CONFLICTS.forEach(c => {
+    const col = c.status === 'active'
+      ? Cesium.Color.fromCssColorString('#ff1a3c')
+      : c.status === 'tensions'
+      ? Cesium.Color.fromCssColorString('#ffd700')
+      : Cesium.Color.fromCssColorString('#ff7800');
+
+    const outerRadius = c.status === 'active' ? 180000 : 120000;
+
+    // Pulsing circle on ground
+    v.entities.add({
+      name: c.name,
+      position: Cesium.Cartesian3.fromDegrees(c.lng, c.lat),
+      ellipse: {
+        semiMinorAxis: new Cesium.CallbackProperty(time => {
+          const t = (Date.now() % 2000) / 2000;
+          return outerRadius * (0.5 + 0.5 * Math.sin(t * Math.PI * 2));
+        }, false),
+        semiMajorAxis: new Cesium.CallbackProperty(time => {
+          const t = (Date.now() % 2000) / 2000;
+          return outerRadius * (0.5 + 0.5 * Math.sin(t * Math.PI * 2));
+        }, false),
+        material: col.withAlpha(0.25),
+        height: 1000,
+      }
+    });
+
+    // Solid inner dot
+    v.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(c.lng, c.lat),
+      ellipse: {
+        semiMinorAxis: outerRadius * 0.35,
+        semiMajorAxis: outerRadius * 0.35,
+        material: col.withAlpha(0.85),
+        outline: true,
+        outlineColor: col,
+        outlineWidth: 2,
+        height: 2000,
+      }
+    });
+
+    // Label
+    v.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(c.lng, c.lat + 1.2),
+      label: {
+        text: c.name,
+        font: '10px Share Tech Mono, monospace',
+        fillColor: col,
+        outlineColor: Cesium.Color.BLACK,
+        outlineWidth: 2,
+        style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+        pixelOffset: new Cesium.Cartesian2(0, -20),
+        scaleByDistance: new Cesium.NearFarScalar(5e5, 1.2, 8e6, 0),
+        translucencyByDistance: new Cesium.NearFarScalar(1e6, 1, 10e6, 0),
+      }
+    });
+  });
+}
+
+function plotPlayerBase(nation) {
+  const v = G.viewer;
+  // Player's capital marker
+  v.entities.add({
+    position: Cesium.Cartesian3.fromDegrees(nation.lng, nation.lat, 50000),
+    cylinder: {
+      length: 300000,
+      topRadius: 0,
+      bottomRadius: 80000,
+      material: Cesium.Color.fromCssColorString('#00d4ff').withAlpha(0.5),
+      outline: true,
+      outlineColor: Cesium.Color.fromCssColorString('#00d4ff'),
+    }
+  });
+  v.entities.add({
+    position: Cesium.Cartesian3.fromDegrees(nation.lng, nation.lat),
+    label: {
+      text: `⚑ ${nation.name.toUpperCase()}`,
+      font: 'bold 12px Orbitron, monospace',
+      fillColor: Cesium.Color.fromCssColorString('#00d4ff'),
+      outlineColor: Cesium.Color.BLACK,
+      outlineWidth: 3,
+      style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+      pixelOffset: new Cesium.Cartesian2(0, -40),
+      scaleByDistance: new Cesium.NearFarScalar(1e5, 1.5, 1e7, 0.3),
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════
+//  GAME START
+// ═══════════════════════════════════════════════════
+function startGame(nation) {
+  G.player = nation;
+  document.getElementById('csel').style.display = 'none';
+  document.getElementById('app').classList.add('show');
+
+  // HUD
+  document.getElementById('pflag').textContent = nation.flag;
+  document.getElementById('pname').textContent = nation.name;
+  document.getElementById('spow').textContent = nation.power;
+  document.getElementById('sbud').textContent = nation.budget;
+  document.getElementById('snuk').textContent = nation.nukes.toLocaleString();
+  document.getElementById('cin-pr').textContent = `${nation.id.toUpperCase()}://> `;
+
+  initCesium(nation);
+  buildUnitList(nation);
+  buildConflictList();
+  startClock();
+  setTimeout(startRandomEvents, 10000);
+
+  clog(`WARNET ONLINE — PLAYING AS ${nation.name.toUpperCase()}`, 'c');
+  clog(`CesiumJS 3D GLOBE INITIALIZING…`, 'y');
+  clog(`${CONFLICTS.length} ACTIVE GLOBAL CONFLICTS PLOTTED ON GLOBE`, 'y');
+  clog(`SELECT UNIT → LAUNCH STRIKE → CLICK ANYWHERE ON GLOBE`, 'c');
+  clog(`DRAG TO ROTATE · SCROLL TO ZOOM · RIGHT-DRAG TO TILT`, 'g');
+  addIntel(`${nation.name} command online. Monitoring ${CONFLICTS.length} global flashpoints.`, 'n');
+  setTimeout(() => addIntel('WARNING: Multiple hostile nations tracking your movements.', 'w'), 5000);
+  setTimeout(() => addIntel('SIGINT: Encrypted burst from DPRK facility — decoding.', 'y'), 11000);
+}
+
+// ═══════════════════════════════════════════════════
+//  UNIT LIST
+// ═══════════════════════════════════════════════════
+function buildUnitList(nation) {
+  const ul = document.getElementById('ulist');
+  const m = nation.mil;
+  const off = Object.entries(m).filter(([k]) => OFF.includes(k));
+  const def = Object.entries(m).filter(([k]) => DEF.includes(k));
+  let h = '';
+  if (off.length) {
+    h += '<div class="usect"><div class="usect-t">// Offensive Arsenal</div>';
+    off.forEach(([k, v]) => {
+      const cl = v < 20 ? 'lo' : v < 100 ? 'md' : 'hi';
+      h += `<div class="urow" id="ur-${k}" onclick="selUnit('${k}')"><div class="uico">${UI[k]||'🔫'}</div><div class="uin"><div class="uname">${UL[k]||k}</div><div class="usub">DMG ${UD[k]||50} · ${UC[k]||200}cr</div></div><div class="ucnt ${cl}" id="uc-${k}">${Number(v).toLocaleString()}</div></div>`;
+    });
+    h += '</div>';
+  }
+  if (def.length) {
+    h += '<div class="usect"><div class="usect-t">// Defense Systems</div>';
+    def.forEach(([k, v]) => {
+      h += `<div class="urow" id="ur-${k}" onclick="selUnit('${k}')"><div class="uico">${UI[k]||'🛡'}</div><div class="uin"><div class="uname">${UL[k]||k}</div><div class="usub">INTERCEPT 85% · ${UC[k]||200}cr</div></div><div class="ucnt hi" id="uc-${k}">${Number(v).toLocaleString()}</div></div>`;
+    });
+    h += '</div>';
+  }
+  ul.innerHTML = h;
+}
+
+function selUnit(k) {
+  document.querySelectorAll('.urow').forEach(r => r.classList.remove('sel'));
+  const el = document.getElementById(`ur-${k}`);
+  if (el) el.classList.add('sel');
+  G.selUnit = k;
+  document.getElementById('selp').textContent = UL[k] || k;
+  clog(`UNIT: ${(UL[k]||k).toUpperCase()} | DMG:${UD[k]||50} | COST:${UC[k]||200}cr`, 'c');
+}
+
+// ═══════════════════════════════════════════════════
+//  CONFLICT LIST
+// ═══════════════════════════════════════════════════
+function buildConflictList() {
+  const list = document.getElementById('cfl-list');
+  list.innerHTML = CONFLICTS.map(c => {
+    const cls = c.status === 'active' ? 'hot' : c.status === 'tensions' ? 'cool' : 'warm';
+    const bdg = c.status === 'active' ? 'active' : c.status === 'tensions' ? 'tensions' : 'ongoing';
+    return `<div class="cfl ${cls}" onclick="flyToConflict(${c.lat},${c.lng})">
+      <div class="cfl-hdr"><div class="cfl-name">${c.name}</div><div class="cfl-bdg ${bdg}">${c.label}</div></div>
+      <div class="cfl-pt">${c.parties}</div>
+      <div class="cfl-cas">⚠ ${c.casualties}</div>
+    </div>`;
+  }).join('');
+}
+
+function flyToConflict(lat, lng) {
+  if (!G.viewer) return;
+  G.viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees(lng, lat, 3000000),
+    duration: 2.5,
+  });
+  const c = CONFLICTS.find(x => x.lat === lat && x.lng === lng);
+  if (c) addIntel(`${c.name}: ${c.desc} — ${c.casualties}`, 'n');
+}
+
+// ═══════════════════════════════════════════════════
+//  STRIKE / DEFEND MODES
+// ═══════════════════════════════════════════════════
+function enterStrike() {
+  if (!G.cesiumReady) { clog('Globe not ready yet', 'r'); return; }
+  if (!G.selUnit) { clog('SELECT A UNIT FIRST', 'r'); return; }
+  if (DEF.includes(G.selUnit)) { clog('DEFENSE UNIT — USE DEPLOY DEFENSE', 'y'); return; }
+  G.mode = 'strike';
+  const b = document.getElementById('mode-banner');
+  b.className = 's'; b.textContent = `⚡ STRIKE MODE — ${UL[G.selUnit]} — CLICK TARGET ON GLOBE`;
+  b.style.display = 'block';
+  document.getElementById('target-hud').style.display = 'block';
+  document.getElementById('cesiumContainer').style.cursor = 'crosshair';
+  clog(`STRIKE MODE — [${UL[G.selUnit]||G.selUnit}] — CLICK TARGET ON THE 3D GLOBE`, 'r');
+}
+
+function enterDefend() {
+  if (!G.cesiumReady) { clog('Globe not ready yet', 'r'); return; }
+  const du = Object.keys(G.player.mil).find(k => DEF.includes(k) && G.player.mil[k] > 0);
+  if (!du) { clog('NO DEFENSE SYSTEMS AVAILABLE', 'r'); return; }
+  if (!G.selUnit || !DEF.includes(G.selUnit)) selUnit(du);
+  G.mode = 'defend';
+  const b = document.getElementById('mode-banner');
+  b.className = 'd'; b.textContent = `🛡 DEPLOY — ${UL[G.selUnit]} — CLICK POSITION ON GLOBE`;
+  b.style.display = 'block';
+  document.getElementById('cesiumContainer').style.cursor = 'crosshair';
+  clog(`DEPLOY MODE — ${UL[G.selUnit]||G.selUnit}`, 'g');
+}
+
+function cancelMode() {
+  G.mode = null;
+  document.getElementById('mode-banner').style.display = 'none';
+  document.getElementById('target-hud').style.display = 'none';
+  document.getElementById('cesiumContainer').style.cursor = '';
+}
+
+function showModal() {
+  const k = G.selUnit, cost = UC[k]||200, dmg = UD[k]||50, avail = G.player.mil[k]||0;
+  document.getElementById('mbod').innerHTML =
+    `UNIT: <span>${UL[k]||k}</span><br>
+     TARGET: <span>${G.pendName}</span><br>
+     COORDS: <span>${G.pendCoords.lat.toFixed(2)}°N / ${G.pendCoords.lng.toFixed(2)}°E</span><br>
+     DAMAGE: <span>${dmg}</span> &nbsp;&nbsp; COST: <span>${cost} credits</span><br>
+     AVAILABLE: <span>${avail.toLocaleString()} units</span>`;
+  document.getElementById('modal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+  cancelMode();
+}
+
+// ═══════════════════════════════════════════════════
+//  EXECUTE STRIKE
+// ═══════════════════════════════════════════════════
+function doStrike() {
+  const k = G.selUnit, cost = UC[k]||200, dmg = UD[k]||50;
+  document.getElementById('modal').classList.remove('show');
+  if (G.credits < cost) { clog('INSUFFICIENT CREDITS', 'r'); cancelMode(); return; }
+  if (!(G.player.mil[k] > 0)) { clog('UNIT DEPLETED', 'r'); cancelMode(); return; }
+
+  G.player.mil[k]--;
+  G.credits -= cost;
+  G.strikes++;
+  G.score += dmg * 15;
+  const uc = document.getElementById(`uc-${k}`);
+  if (uc) uc.textContent = G.player.mil[k].toLocaleString();
+  updateHUD();
+
+  const isNuke = NUKE_UNITS.includes(k);
+  launchMissile(G.player.lat, G.player.lng, G.pendCoords.lat, G.pendCoords.lng, k, isNuke, dmg, false);
+
+  cancelMode();
+  updateDefcon();
+  scheduleRetaliation();
+}
+
+// ═══════════════════════════════════════════════════
+//  CESIUM MISSILE ANIMATION
+// ═══════════════════════════════════════════════════
+function launchMissile(fromLat, fromLng, toLat, toLng, unit, isNuke, dmg, isEnemy) {
+  const v = G.viewer;
+  const color = isEnemy
+    ? Cesium.Color.fromCssColorString('#ff1a3c')
+    : isNuke
+      ? Cesium.Color.ORANGE
+      : Cesium.Color.fromCssColorString('#00d4ff');
+
+  const start = Cesium.Cartesian3.fromDegrees(fromLng, fromLat);
+  const end   = Cesium.Cartesian3.fromDegrees(toLng, toLat);
+
+  // Build geodesic arc with altitude
+  const numPts = 80;
+  const arcPts = [];
+  const dist = Cesium.Cartesian3.distance(start, end);
+  const peakAlt = isNuke ? Math.max(1500000, dist * 0.35) : Math.max(500000, dist * 0.2);
+
+  for (let i = 0; i <= numPts; i++) {
+    const t = i / numPts;
+    const lat = fromLat + (toLat - fromLat) * t;
+    const lng = fromLng + (toLng - fromLng) * t;
+    const altFactor = Math.sin(t * Math.PI);
+    const alt = peakAlt * altFactor;
+    arcPts.push(Cesium.Cartesian3.fromDegrees(lng, lat, alt));
+  }
+
+  // Animate moving dot along arc
+  const startTime = Cesium.JulianDate.now();
+  const duration = isNuke ? 4.0 : 2.5;
+  const stopTime = Cesium.JulianDate.addSeconds(startTime, duration, new Cesium.JulianDate());
+
+  const sampledPos = new Cesium.SampledPositionProperty();
+  arcPts.forEach((pt, i) => {
+    const t = Cesium.JulianDate.addSeconds(startTime, (i / numPts) * duration, new Cesium.JulianDate());
+    sampledPos.addSample(t, pt);
+  });
+  sampledPos.setInterpolationOptions({ interpolationDegree:5, interpolationAlgorithm: Cesium.LagrangePolynomialApproximation });
+
+  // Missile entity
+  const missileEntity = v.entities.add({
+    availability: new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({ start: startTime, stop: stopTime })]),
+    position: sampledPos,
+    orientation: new Cesium.VelocityOrientationProperty(sampledPos),
+    point: {
+      pixelSize: isNuke ? 10 : 7,
+      color: color,
+      outlineColor: Cesium.Color.WHITE,
+      outlineWidth: 1,
+      scaleByDistance: new Cesium.NearFarScalar(1e3, 2, 2e7, 0.5),
+    },
+  });
+
+  // Trail polyline (builds as it moves)
+  const trailEntity = v.entities.add({
+    polyline: {
+      positions: new Cesium.CallbackProperty(() => {
+        const now = Cesium.JulianDate.now();
+        const elapsed = Cesium.JulianDate.secondsDifference(now, startTime);
+        const frac = Math.min(1, elapsed / duration);
+        const count = Math.floor(frac * numPts);
+        return arcPts.slice(0, Math.max(2, count));
+      }, false),
+      width: isNuke ? 2.5 : 1.5,
+      material: new Cesium.PolylineGlowMaterialProperty({
+        glowPower: 0.25,
+        color: color.withAlpha(0.7),
+      }),
+    }
+  });
+
+  // On impact
+  setTimeout(() => {
+    v.entities.remove(missileEntity);
+    v.entities.remove(trailEntity);
+    createExplosion(toLat, toLng, isNuke, color, dmg, isEnemy);
+  }, duration * 1000);
+}
+
+// ═══════════════════════════════════════════════════
+//  CESIUM EXPLOSION
+// ═══════════════════════════════════════════════════
+function createExplosion(lat, lng, isNuke, color, dmg, isEnemy) {
+  const v = G.viewer;
+  const pos = Cesium.Cartesian3.fromDegrees(lng, lat);
+  const baseRadius = isNuke ? 300000 : 80000;
+
+  // Flash sphere
+  let r = 1000;
+  const sphere = v.entities.add({
+    position: pos,
+    ellipsoid: {
+      radii: new Cesium.CallbackProperty(() => new Cesium.Cartesian3(r, r, r), false),
+      material: color.withAlpha(0.6),
+    }
+  });
+
+  // Expand and fade
+  const flashDur = isNuke ? 2500 : 1200;
+  const startT = Date.now();
+  const interval = setInterval(() => {
+    const frac = (Date.now() - startT) / flashDur;
+    if (frac >= 1) {
+      clearInterval(interval);
+      v.entities.remove(sphere);
+      v.entities.remove(ring1);
+      v.entities.remove(ring2);
+      if (isNuke) v.entities.remove(mushroom);
+      return;
+    }
+    r = baseRadius * Math.sqrt(frac);
+    ring1._ellipse._semiMajorAxis._value = baseRadius * 1.5 * frac;
+    ring1._ellipse._semiMinorAxis._value = baseRadius * 1.5 * frac;
+    ring2._ellipse._semiMajorAxis._value = baseRadius * 3.0 * frac;
+    ring2._ellipse._semiMinorAxis._value = baseRadius * 3.0 * frac;
+  }, 16);
+
+  // Shockwave rings
+  const ring1 = v.entities.add({
+    position: pos,
+    ellipse: {
+      semiMajorAxis: 1000,
+      semiMinorAxis: 1000,
+      material: color.withAlpha(0.3),
+      outline: true,
+      outlineColor: color,
+      outlineWidth: 2,
+      height: 500,
+    }
+  });
+  const ring2 = v.entities.add({
+    position: pos,
+    ellipse: {
+      semiMajorAxis: 1000,
+      semiMinorAxis: 1000,
+      material: Cesium.Color.TRANSPARENT,
+      outline: true,
+      outlineColor: color.withAlpha(0.4),
+      outlineWidth: 1.5,
+      height: 500,
+    }
+  });
+
+  // Mushroom cloud pillar (nuclear only)
+  let mushroom;
+  if (isNuke) {
+    mushroom = v.entities.add({
+      position: Cesium.Cartesian3.fromDegrees(lng, lat, 150000),
+      cylinder: {
+        length: 400000,
+        topRadius: 250000,
+        bottomRadius: 20000,
+        material: Cesium.Color.fromCssColorString('#ff7700').withAlpha(0.35),
+        outline: true,
+        outlineColor: Cesium.Color.fromCssColorString('#ff3300').withAlpha(0.5),
+      }
+    });
+    setTimeout(() => { try { v.entities.remove(mushroom); } catch(e){} }, flashDur + 3000);
+  }
+
+  // Screen flash
+  screenFlash(lng, lat, isNuke);
+
+  // Log
+  if (!isEnemy) {
+    clog(`IMPACT: ${G.pendName || 'target'} — damage ${dmg}`, 'r');
+    addIntel(`Strike confirmed on ${G.pendName}. Estimated damage: ${dmg}.`, 'w');
+  } else {
+    // Enemy hit — chip HP
+  }
+}
+
+function screenFlash(lng, lat, isNuke) {
+  const div = document.createElement('div');
+  div.className = 'expl-flash';
+  // Rough screen position
+  div.style.setProperty('--ex', '50%');
+  div.style.setProperty('--ey', '50%');
+  if (isNuke) div.style.background = 'radial-gradient(circle at 50% 50%, rgba(255,255,200,.5) 0%, rgba(255,100,0,.2) 40%, transparent 70%)';
+  document.body.appendChild(div);
+  setTimeout(() => div.remove(), 900);
+}
+
+// ═══════════════════════════════════════════════════
+//  DEPLOY DEFENSE
+// ═══════════════════════════════════════════════════
+function deployDefenseAt(lat, lng) {
+  const k = G.selUnit;
+  if (!DEF.includes(k)) return;
+  const cost = UC[k]||300;
+  if (G.credits < cost) { clog('INSUFFICIENT CREDITS', 'r'); cancelMode(); return; }
+  if (!(G.player.mil[k] > 0)) { clog('UNIT DEPLETED', 'r'); cancelMode(); return; }
+
+  G.player.mil[k]--;
+  G.credits -= cost;
+  const uc = document.getElementById(`uc-${k}`);
+  if (uc) uc.textContent = G.player.mil[k].toLocaleString();
+
+  // Cesium defense marker
+  const v = G.viewer;
+  const range = k === 'thaad' ? 350000 : k === 's400' ? 300000 : 150000;
+
+  v.entities.add({
+    position: Cesium.Cartesian3.fromDegrees(lng, lat),
+    ellipse: {
+      semiMajorAxis: range,
+      semiMinorAxis: range,
+      material: Cesium.Color.fromCssColorString('#00ff88').withAlpha(0.08),
+      outline: true,
+      outlineColor: Cesium.Color.fromCssColorString('#00ff88').withAlpha(0.5),
+      outlineWidth: 1.5,
+      height: 1000,
+      granularity: 0.01,
+    }
+  });
+  v.entities.add({
+    position: Cesium.Cartesian3.fromDegrees(lng, lat),
+    billboard: {
+      text: '🛡',
+      font: '20px sans-serif',
+      scaleByDistance: new Cesium.NearFarScalar(1e4, 2, 2e7, 0.3),
+    }
+  });
+
+  G.defenses.push({ lat, lng, unit: k, range });
+  updateHUD();
+  cancelMode();
+  clog(`${UL[k]||k} DEPLOYED @ ${lat.toFixed(1)}°N ${lng.toFixed(1)}°E`, 'g');
+  addIntel(`Defense battery active: ${UL[k]||k}.`, 'ok');
+}
+
+// ═══════════════════════════════════════════════════
+//  SALVO STRIKE (fires 3 missiles at 3 random conflicts)
+// ═══════════════════════════════════════════════════
+function launchSalvo() {
+  if (!G.cesiumReady) return;
+  if (G.credits < 3000) { clog('INSUFFICIENT CREDITS FOR SALVO (need 3000cr)', 'r'); return; }
+  if (!G.selUnit || DEF.includes(G.selUnit)) { clog('SELECT AN OFFENSIVE UNIT FOR SALVO', 'y'); return; }
+
+  G.credits -= 3000;
+  const targets = [...CONFLICTS].sort(() => Math.random() - 0.5).slice(0, 3);
+  targets.forEach((c, i) => {
+    setTimeout(() => {
+      const k = G.selUnit;
+      const dmg = UD[k]||50;
+      G.player.mil[k] = Math.max(0, G.player.mil[k] - 1);
+      G.score += dmg * 12;
+      G.strikes++;
+      const uc = document.getElementById(`uc-${k}`);
+      if (uc) uc.textContent = G.player.mil[k].toLocaleString();
+      launchMissile(G.player.lat, G.player.lng, c.lat, c.lng, k, NUKE_UNITS.includes(k), dmg, false);
+      G.pendName = c.name;
+    }, i * 800);
+  });
+
+  setTimeout(() => {
+    updateHUD(); updateDefcon();
+    clog(`SALVO LAUNCHED — 3 STRIKES — TARGETS: ${targets.map(c=>c.name).join(' · ')}`, 'r');
+    addIntel(`Salvo strike authorized. 3 warheads en route.`, 'w');
+    scheduleRetaliation();
+  }, 2400);
+}
+
+// ═══════════════════════════════════════════════════
+//  ENEMY RETALIATION
+// ═══════════════════════════════════════════════════
+function scheduleRetaliation() {
+  setTimeout(() => {
+    if (!G.gameActive || !G.cesiumReady) return;
+    const hostiles = CONFLICTS.filter(c => c.status === 'active' || c.status === 'tensions');
+    const att = hostiles[Math.floor(Math.random() * hostiles.length)];
+    if (!att) return;
+
+    // Target near player capital
+    const tLat = G.player.lat + (Math.random() - 0.5) * 6;
+    const tLng = G.player.lng + (Math.random() - 0.5) * 6;
+
+    // Check intercept
+    let intercepted = false;
+    for (const d of G.defenses) {
+      const dist = Math.hypot(d.lat - tLat, d.lng - tLng) * 111000;
+      if (dist < d.range && Math.random() < 0.82) {
+        intercepted = true;
+        // Show intercept explosion
+        const iLat = (d.lat + tLat) / 2;
+        const iLng = (d.lng + tLng) / 2;
+        createExplosion(iLat, iLng, false, Cesium.Color.fromCssColorString('#00ff88'), 0, true);
+        clog(`INTERCEPT: ${UL[d.unit]} neutralized enemy missile!`, 'g');
+        addIntel('Enemy warhead neutralized by defense battery.', 'ok');
+        break;
+      }
+    }
+
+    if (!intercepted) {
+      launchMissile(att.lng, att.lat, tLat, tLng, 'icbm', Math.random() > 0.5, 0, true);
+      const dmg = 15 + Math.floor(Math.random() * 25);
+      G.hp = Math.max(0, G.hp - dmg);
+      document.getElementById('hpn').textContent = G.hp;
+      document.getElementById('hpf').style.width = G.hp + '%';
+      document.getElementById('hpf').style.background = G.hp < 25 ? 'var(--red)' : G.hp < 55 ? 'var(--orange)' : 'var(--green)';
+      clog(`ENEMY STRIKE HIT — ${dmg} DAMAGE — HP: ${G.hp}%`, 'r');
+      addIntel(`Retaliation from ${att.parties.split(' ')[0]}. −${dmg} HP. Now ${G.hp}%.`, 'w');
+      if (G.hp <= 0) endGame(false);
+    }
+  }, 5000 + Math.random() * 10000);
+}
+
+// ═══════════════════════════════════════════════════
+//  RELOAD
+// ═══════════════════════════════════════════════════
+function reloadArsenal() {
+  if (G.credits < 2000) { clog('INSUFFICIENT CREDITS', 'r'); return; }
+  G.credits -= 2000;
+  Object.keys(G.player.mil).forEach(k => {
+    if (OFF.includes(k) && G.player.mil[k] < 500) {
+      G.player.mil[k] += 30;
+      const el = document.getElementById(`uc-${k}`);
+      if (el) el.textContent = G.player.mil[k].toLocaleString();
+    }
+  });
+  clog('ARSENAL RELOADED (+30 per type) — 2000cr deducted', 'y');
+  updateHUD();
+}
+
+// ═══════════════════════════════════════════════════
+//  HUD + DEFCON
+// ═══════════════════════════════════════════════════
+function updateHUD() {
+  document.getElementById('hstr').textContent = G.strikes;
+  document.getElementById('hsc').textContent = G.score.toLocaleString();
+  document.getElementById('hcr').textContent = G.credits.toLocaleString();
+}
+
+function updateDefcon() {
+  const prev = G.defcon;
+  G.defcon = G.strikes >= 12 ? 1 : G.strikes >= 8 ? 2 : G.strikes >= 4 ? 3 : G.strikes >= 1 ? 4 : 5;
+  const p = document.getElementById('dpill');
+  p.textContent = G.defcon;
+  const cols = { 1:'#ff1a3c', 2:'#ff4400', 3:'#ff7800', 4:'#ffaa00', 5:'#00ff88' };
+  p.style.color = cols[G.defcon];
+  p.style.borderColor = cols[G.defcon];
+  if (G.defcon < prev) {
+    clog(`⚠ DEFCON ELEVATED TO ${G.defcon}`, 'r');
+    addIntel(`Global DEFCON now level ${G.defcon}.`, 'w');
+  }
+  if (G.score >= 10000) endGame(true);
+}
+
+// ═══════════════════════════════════════════════════
+//  INTEL + CONSOLE
+// ═══════════════════════════════════════════════════
+const IPOOL = [
+  'Satellite confirms military buildup near disputed border.',
+  'Encrypted burst intercepted — decoding in progress.',
+  'HUMINT: warhead transfer at undisclosed facility.',
+  'Radar: unidentified aircraft bearing 045, FL450.',
+  'Submarine surfaced 80nm off coast — unknown flag.',
+  'Underground facility thermal anomaly detected.',
+  'Air defense radar — possible hostile lock.',
+  'Naval blockade — commercial shipping rerouted.',
+  'Ballistic trajectory computed — 8min to impact.',
+  'Drone swarm detected approaching eastern perimeter.',
+  'Cyberattack on power grid — partial blackout.',
+  'Carrier group repositioned to strike range.',
+];
+
+function addIntel(msg, type = 'n') {
+  const el = document.getElementById('intel');
+  const t = new Date().toUTCString().slice(17, 25);
+  const d = document.createElement('div');
+  d.className = `imsg ${type}`;
+  d.innerHTML = `<span class="its">[${t}]</span>${msg}`;
+  el.prepend(d);
+  while (el.children.length > 22) el.removeChild(el.lastChild);
+}
+
+function clog(msg, type = '') {
+  const out = document.getElementById('con-out');
+  const t = new Date().toUTCString().slice(17, 25);
+  const d = document.createElement('div');
+  d.className = 'cl';
+  d.innerHTML = `<span class="cts">[${t}]</span><span class="ctx ${type}">${msg}</span>`;
+  out.appendChild(d);
+  out.scrollTop = out.scrollHeight;
+  while (out.children.length > 60) out.removeChild(out.firstChild);
+}
+
+document.getElementById('cmd').addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const v = e.target.value.trim();
+  e.target.value = '';
+  if (!v) return;
+  clog('> ' + v, '');
+  handleCmd(v.toLowerCase());
+});
+
+function handleCmd(cmd) {
+  const [c, ...a] = cmd.split(' ');
+  const args = a.join(' ');
+  const cmds = {
+    help: () => clog('help · status · arsenal · conflicts · score · reload · clear · flyto [name] · cam [reset/top]', 'c'),
+    status: () => clog(`HP:${G.hp}% | DEFCON:${G.defcon} | STRIKES:${G.strikes} | SCORE:${G.score} | CREDITS:${G.credits}`, 'c'),
+    arsenal: () => Object.entries(G.player.mil).forEach(([k, v]) => clog(`${(UL[k]||k).padEnd(22)} ${v.toLocaleString()}`, 'c')),
+    intel: () => addIntel(IPOOL[Math.floor(Math.random() * IPOOL.length)], 'n'),
+    conflicts: () => CONFLICTS.forEach(cf => clog(`${cf.name.padEnd(30)} ${cf.label}`, cf.status === 'active' ? 'r' : cf.status === 'tensions' ? 'y' : 'c')),
+    score: () => clog(`SCORE: ${G.score} | STRIKES: ${G.strikes} | DEFCON: ${G.defcon}`, 'c'),
+    reload: () => reloadArsenal(),
+    clear: () => { document.getElementById('con-out').innerHTML = ''; },
+    flyto: () => {
+      if (!G.viewer) return;
+      const n = NATIONS.find(n => n.name.toLowerCase().includes(args) || n.id === args);
+      const cf = CONFLICTS.find(c => c.name.toLowerCase().includes(args) || c.id.includes(args));
+      if (n) {
+        G.viewer.camera.flyTo({
+          destination: Cesium.Cartesian3.fromDegrees(n.camLng, n.camLat, n.camAlt / 1.5),
+          duration: 2.5,
+        });
+      } else if (cf) {
+        flyToConflict(cf.lat, cf.lng);
+      } else {
+        clog(`NOT FOUND: ${args}`, 'r');
+      }
+    },
+    cam: () => {
+      if (!G.viewer) return;
+      if (args === 'reset') {
+        G.viewer.camera.flyTo({
+          destination: Cesium.Cartesian3.fromDegrees(G.player.camLng, G.player.camLat, G.player.camAlt),
+          duration: 2,
+        });
+      } else if (args === 'top') {
+        G.viewer.camera.flyTo({
+          destination: Cesium.Cartesian3.fromDegrees(0, 20, 25e6),
+          duration: 3,
+        });
+      }
+    },
+  };
+  if (cmds[c]) cmds[c]();
+  else clog(`UNKNOWN: ${cmd} — type "help"`, 'r');
+}
+
+// ═══════════════════════════════════════════════════
+//  CLOCK + RANDOM EVENTS
+// ═══════════════════════════════════════════════════
+function startClock() {
+  setInterval(() => {
+    const d = new Date();
+    document.getElementById('hclock').textContent =
+      `${String(d.getUTCHours()).padStart(2,'0')}:${String(d.getUTCMinutes()).padStart(2,'0')}:${String(d.getUTCSeconds()).padStart(2,'0')}`;
+  }, 1000);
+}
+
+function startRandomEvents() {
+  function fire() {
+    if (!G.gameActive) return;
+    const evts = [
+      () => addIntel(IPOOL[Math.floor(Math.random() * IPOOL.length)], Math.random() > 0.6 ? 'w' : 'n'),
+      () => {
+        if (!G.cesiumReady) return;
+        const c = CONFLICTS[Math.floor(Math.random() * CONFLICTS.length)];
+        const col = Cesium.Color.fromCssColorString(c.status === 'active' ? '#ff1a3c' : '#ff7800');
+        createExplosion(c.lat + (Math.random()-0.5)*2, c.lng + (Math.random()-0.5)*2, false, col, 0, true);
+        addIntel(`Activity spike detected: ${c.name}`, 'w');
+      },
+    ];
+    evts[Math.floor(Math.random() * evts.length)]();
+    setTimeout(fire, 6000 + Math.random() * 14000);
+  }
+  fire();
+}
+
+// ═══════════════════════════════════════════════════
+//  GAME OVER
+// ═══════════════════════════════════════════════════
+function endGame(win) {
+  G.gameActive = false;
+  const sc = document.getElementById('go');
+  sc.classList.add('show');
+  document.getElementById('go-t').textContent = win ? 'VICTORY' : 'NATION DESTROYED';
+  document.getElementById('go-t').style.color = win ? 'var(--green)' : 'var(--red)';
+  document.getElementById('go-s').textContent = win ? 'GLOBAL DOMINANCE ACHIEVED' : 'YOUR TERRITORY HAS FALLEN';
+  document.getElementById('go-stats').innerHTML =
+    `FINAL SCORE: ${G.score.toLocaleString()}<br>
+     STRIKES LAUNCHED: ${G.strikes}<br>
+     DEFCON REACHED: ${G.defcon}<br>
+     DEFENSES DEPLOYED: ${G.defenses.length}<br>
+     CREDITS REMAINING: ${G.credits.toLocaleString()}`;
+}
+
+// (game logic moved to src/main.js)
+</script>
+</body>
+</html>
