@@ -1,4 +1,8 @@
 import * as Cesium from 'cesium';
+// Expose Cesium as a global for any inline scripts that expect a window.Cesium
+// This resolves runtime errors like "Cesium is not defined" when inline
+// code in index.html references Cesium before module-scoped access.
+window.Cesium = Cesium;
 import 'cesium/Build/Cesium/Widgets/widgets.css';
 import { startRealtime } from './realtime.js';
 

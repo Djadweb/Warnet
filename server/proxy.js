@@ -2,7 +2,7 @@ import express from 'express';
 import fetch from 'node-fetch';
 import cors from 'cors';
 import http from 'http';
-import WebSocket from 'ws';
+import WebSocket, { WebSocketServer } from 'ws';
 
 const app = express();
 app.use(cors());
@@ -85,7 +85,7 @@ function startPolling() {
 
 // HTTP & WS server
 const server = http.createServer(app);
-const wss = new WebSocket.Server({ server, path: '/ws/events' });
+const wss = new WebSocketServer({ server, path: '/ws/events' });
 
 function broadcastWS(ev) {
   const msg = JSON.stringify(ev);
@@ -100,10 +100,18 @@ wss.on('connection', ws => {
 
 // API endpoint
 app.get('/api/events', (req, res) => {
-  // if provider not configured, return 501 with helpful message
+  // if provider not configured, return demo events (avoid 501 responses)
   const base = process.env.ACLED_BASE_URL;
   const key = process.env.ACLED_KEY;
-  if (!base || !key) return res.status(501).json({ error: 'ACLED not configured on server. Set ACLED_BASE_URL and ACLED_KEY in env.' });
+  if (!base || !key) {
+    const now = Date.now();
+    const demo = [
+      { id: `demo-${now}-1`, ts: now, source: 'demo', country: 'Israel–Gaza', lat: 31.5, lng: 34.4, type: 'strike', severity: 6, headline: 'Demo: reported strike near Gaza', url: '' },
+      { id: `demo-${now}-2`, ts: now - 60000, source: 'demo', country: 'Russia–Ukraine', lat: 49.0, lng: 31.0, type: 'strike', severity: 7, headline: 'Demo: artillery exchange reported in Ukraine', url: '' },
+      { id: `demo-${now}-3`, ts: now - 120000, source: 'demo', country: 'Sudan', lat: 15.5, lng: 32.5, type: 'skirmish', severity: 4, headline: 'Demo: clashes reported near Khartoum', url: '' },
+    ];
+    return res.json(demo);
+  }
   const arr = Array.from(EVENTS.values()).sort((a,b) => (b.ts||0) - (a.ts||0));
   res.json(arr.slice(0, 500));
 });
