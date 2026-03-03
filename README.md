@@ -1,6 +1,6 @@
 # Warnet
 
-![App screenshot](/Users/macbook/Documents/Screenshot 2026-03-02 at 12.58.19 am.png)
+<img width="1872" height="913" alt="Screenshot 2026-03-02 at 12 58 19 am" src="https://github.com/user-attachments/assets/70eeaa71-528b-4597-8da4-46b51c326807" />
 
 
 Warnet is a small, browser-based interactive globe built with Cesium and Vite that visualizes simulated and live conflict events as strikes and ship deployments. It started as an experimental map-based game and includes persistence, autosave, and a simple server poller with WebSocket broadcasting for real-time event feeds.
